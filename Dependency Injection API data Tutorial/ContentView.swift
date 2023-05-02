@@ -10,10 +10,10 @@
 //  Why?  Singletons have three flaws
 //    1) its a global, instance accessed from any class.
 //       collision on different threads can be an issue.
-//    2) initiated and configured only once
+//    2) initiated and configured only once, cant be customized.
 //    3) we cant swap out services
 
-//  Dependency Injection can fix
+//  Dependency Injection can fix the three problems above.
 
 
 
@@ -44,7 +44,7 @@ struct PostsModel: Identifiable, Codable {
 }
 
 // 5
-// fetches data
+// fetch data from API
 
 class ProductionDataService {
   
