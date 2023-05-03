@@ -117,13 +117,12 @@ class ProductionDataService {
 
 
 
-
 struct ContentView: View {
   
   // 2
   //@StateObject private var vm = DependencyInjectionViewModel()
   // with dependency injection...
-  @StateObject private var vm = DependencyInjectionViewModel
+  @StateObject private var vm: DependencyInjectionViewModel
   
   init( dataService: ProductionDataService) {
     
