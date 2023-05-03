@@ -48,8 +48,11 @@ struct PostsModel: Identifiable, Codable {
 
 class ProductionDataService {
   
-  // using a singleton
+ /* // using a singleton
   static let instance = ProductionDataService()  // Singleton
+ */
+  
+  
   
   //  ( explicitly unwrapping an optional is not recommended for production )
   let url: URL = URL(string: "https://jsonplaceholder.typicode.com/posts")!
@@ -81,15 +84,27 @@ class ProductionDataService {
    @Published var dataArray: [PostsModel] = []
    var cancellables = Set<AnyCancellable>()
    
-   init() {
+   // dependency injection
+   let dataService: ProductionDataService
+   
+   // depedency injection, we init dataServic
+   init( dataService:ProductionDataService  ) {
+     
+     self.dataService = dataService   // we now have access to the dataservice
      
      loadPosts()
      
    }
    private func loadPosts() {
-     
+    
+     /*
      // using singleton to get data, then sink it
      ProductionDataService.instance.getData()
+     */
+     
+     // dependency injection
+     dataService.getData()
+     
        .sink { _ in
          
        } receiveValue: { [weak self] returnedPosts in
@@ -102,12 +117,18 @@ class ProductionDataService {
 
 
 
-
 struct ContentView: View {
   
   // 2
-  @StateObject private var vm = DependencyInjectionViewModel()
+  //@StateObject private var vm = DependencyInjectionViewModel()
+  // with dependency injection...
+  @StateObject private var vm: DependencyInjectionViewModel
   
+  init( dataService: ProductionDataService) {
+    
+    _vm = StateObject(wrappedValue:DependencyInjectionViewModel(dataService: dataService))
+
+  }
   
   
     var body: some View {
@@ -123,7 +144,10 @@ struct ContentView: View {
 }
 
 struct ContentView_Previews: PreviewProvider {
+  
+  static let dataService = ProductionDataService()
+  
     static var previews: some View {
-        ContentView()
+      ContentView(dataService: dataService)
     }
 }

@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct Dependency_Injection_API_data_TutorialApp: App {
+  
+ // let dataService:ProductionDataService = ProductionDataService()
+    let dataService = ProductionDataService()
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(dataService: dataService )
         }
     }
 }
