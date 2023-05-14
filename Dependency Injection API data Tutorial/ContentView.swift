@@ -25,8 +25,11 @@ import Combine
 
   // 3) the data
 struct PostsModel: Identifiable, Codable {
-  // from url website
+  // from url test data website,https://jsonplaceholder.typicode.com/posts data
+  // has this json format
+ 
   /*
+   
    {
    "userId": 1,
    "id": 1,
@@ -59,14 +62,15 @@ class ProductionDataService {
   
 
   
-  // get data returns AnyPublisher with a result with an array of PostsModel and Error
-  func getData() -> AnyPublisher<[PostsModel], Error> {
+  // getData returns AnyPublisher with a result with an array of PostsModel and Error
+
+  func getData() -> AnyPublisher< [PostsModel], Error > {
     
     // fetch data with combine
     URLSession.shared.dataTaskPublisher(for: url)
     
     // map the data and decode data to post model
-      .map({ $0.data })
+      .map( { $0.data } )
       .decode(type: [PostsModel].self, decoder: JSONDecoder())
       .receive(on:DispatchQueue.main)
       .eraseToAnyPublisher()
@@ -87,7 +91,7 @@ class ProductionDataService {
    // dependency injection
    let dataService: ProductionDataService
    
-   // depedency injection, we init dataServic
+   // depedency injection, we init with dataService or any other service
    init( dataService:ProductionDataService  ) {
      
      self.dataService = dataService   // we now have access to the dataservice
@@ -95,14 +99,19 @@ class ProductionDataService {
      loadPosts()
      
    }
+   
    private func loadPosts() {
     
+     
+     
      /*
-     // using singleton to get data, then sink it
+     // if using singleton to get data, do this, then sink it
      ProductionDataService.instance.getData()
      */
      
-     // dependency injection
+     
+     // if using dependency injection, do this:
+     
      dataService.getData()
      
        .sink { _ in
@@ -122,7 +131,7 @@ struct ContentView: View {
   // 2
   //@StateObject private var vm = DependencyInjectionViewModel()
   // with dependency injection...
-  @StateObject private var vm: DependencyInjectionViewModel
+  @StateObject private var vm: DependencyInjectionViewModel   // type rather than function
   
   init( dataService: ProductionDataService) {
     
@@ -145,9 +154,9 @@ struct ContentView: View {
 
 struct ContentView_Previews: PreviewProvider {
   
-  static let dataService = ProductionDataService()
+    static let dataService = ProductionDataService()
   
     static var previews: some View {
-      ContentView(dataService: dataService)
+       ContentView(dataService: dataService)
     }
 }
