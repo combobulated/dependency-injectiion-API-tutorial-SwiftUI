@@ -11,7 +11,7 @@
 //    1) its a global, instance accessed from any class.
 //       collision on different threads can be an issue.
 //    2) initiated and configured only once, cant be customized.
-//    3) we cant swap out services
+//    3) we cant swap out dependencies
 
 //  Dependency Injection can fix the three problems above.
 
@@ -46,10 +46,15 @@ struct PostsModel: Identifiable, Codable {
   
 }
 
+protocol DataServiceProtocol {
+  // must have:
+  func getData() -> AnyPublisher< [PostsModel], Error >
+}
+
 // 5
 // fetch data from API
 
-class ProductionDataService {
+class ProductionDataService: DataServiceProtocol {
   
  /* // using a singleton
   static let instance = ProductionDataService()  // Singleton
@@ -87,37 +92,40 @@ class ProductionDataService {
   
 }
 
-class DataService {
-  
- /* // using a singleton
-  static let instance = ProductionDataService()  // Singleton
- */
-  
-  
-  
-  //  ( explicitly unwrapping an optional is not recommended for production )
-  let url: URL = URL(string: "https://jsonplaceholder.typicode.com/posts")!
-  
 
-  
-  // getData returns AnyPublisher with a result with an array of PostsModel and Error
 
+
+// for testing and developing we can add a test version of ProductionDataService.
+// but rather than passing a productionDataService, we pass in a protocol,
+class MockDataService: DataServiceProtocol {
+  
+// for test data
+  let testData: [PostsModel]
+  
+  init(data: [PostsModel]?) {
+   // note we use optional here so that we can test with nil data
+    
+    self.testData = data ?? [
+      
+      PostsModel(userId: 1, id: 1, title: "One", body: "one"),
+      PostsModel(userId: 2, id: 2, title: "Two", body: "two"),
+      PostsModel(userId: 3, id: 3, title: "Three", body: "three")
+      
+    ]
+  }
+  
   func getData() -> AnyPublisher< [PostsModel], Error > {
     
-    // fetch data with combine
-    URLSession.shared.dataTaskPublisher(for: url)
+    // just is a single publisher with a single output
     
-    // map the data and decode data to post model
-      .map( { $0.data } )
-      .decode(type: [PostsModel].self, decoder: JSONDecoder())
-      .receive(on:DispatchQueue.main)
-      .eraseToAnyPublisher()
+    Just(testData)           // Just will not throw an error so we use trymap to give it a possible error
     
+      .tryMap({$0})           // gives the simulated error the data
+      .eraseToAnyPublisher()  // publisher now has a possible Error even though none will exhist
     
   }
   
 }
-
 
 
 
@@ -128,12 +136,15 @@ class DataService {
    // 4
    @Published var dataArray: [PostsModel] = []
    var cancellables = Set<AnyCancellable>()
+  
+   let dataService: DataServiceProtocol
+   
    
    // dependency injection
-   let dataService: ProductionDataService
+ //  let dataService: ProductionDataService
    
    // depedency injection, we init with dataService or any other service
-   init( dataService:ProductionDataService  ) {
+   init( dataService:DataServiceProtocol  ) {
      
      self.dataService = dataService   // we now have access to the dataservice
      
@@ -174,7 +185,7 @@ struct ContentView: View {
   // with dependency injection...
   @StateObject private var vm: DependencyInjectionViewModel   // type rather than function
   
-  init( dataService: ProductionDataService) {
+  init( dataService: DataServiceProtocol ) {
     
     _vm = StateObject(wrappedValue:DependencyInjectionViewModel(dataService: dataService))
 
@@ -194,8 +205,17 @@ struct ContentView: View {
 }
 
 struct ContentView_Previews: PreviewProvider {
-  
-  static let dataService = ProductionDataService(url: URL(string: "https://jsonplaceholder.typicode.com/posts")!)
+
+//  production data service
+//  static let dataService = ProductionDataService(url: URL(string: "https://jsonplaceholder.typicode.com/posts")!)
+
+//   default data
+//    static let dataService = MockDataService(data: nil)
+
+//   or specific test data
+    static let dataService = MockDataService(data: [
+      PostsModel(userId: 1234, id: 1234, title:"test", body: "test"),
+      PostsModel(userId: 1235, id: 1234, title: "test1", body: "test1")] )
   
     static var previews: some View {
        ContentView(dataService: dataService)
