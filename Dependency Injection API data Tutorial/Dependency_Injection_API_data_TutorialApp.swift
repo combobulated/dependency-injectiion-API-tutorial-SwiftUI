@@ -13,7 +13,7 @@ struct Dependency_Injection_API_data_TutorialApp: App {
   //  let dataService:ProductionDataService = ProductionDataService()
   //   or simplified:
   
-    let dataService = ProductionDataService()
+  let dataService = ProductionDataService(url: URL(string: "https://jsonplaceholder.typicode.com/posts")!)
   
     var body: some Scene {
         WindowGroup {

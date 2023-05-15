@@ -58,6 +58,44 @@ class ProductionDataService {
   
   
   //  ( explicitly unwrapping an optional is not recommended for production )
+//  let url: URL = URL(string: "https://jsonplaceholder.typicode.com/posts")!
+
+ // now, make url customizable
+  let url: URL
+  
+  init(url: URL)  {
+    self.url = url
+  }
+  
+
+  
+  // getData returns AnyPublisher with a result with an array of PostsModel and Error
+
+  func getData() -> AnyPublisher< [PostsModel], Error > {
+    
+    // fetch data with combine
+    URLSession.shared.dataTaskPublisher(for: url)
+    
+    // map the data and decode data to post model
+      .map( { $0.data } )
+      .decode(type: [PostsModel].self, decoder: JSONDecoder())
+      .receive(on:DispatchQueue.main)
+      .eraseToAnyPublisher()
+    
+    
+  }
+  
+}
+
+class DataService {
+  
+ /* // using a singleton
+  static let instance = ProductionDataService()  // Singleton
+ */
+  
+  
+  
+  //  ( explicitly unwrapping an optional is not recommended for production )
   let url: URL = URL(string: "https://jsonplaceholder.typicode.com/posts")!
   
 
@@ -79,6 +117,9 @@ class ProductionDataService {
   }
   
 }
+
+
+
 
 
   // 1)
@@ -154,7 +195,7 @@ struct ContentView: View {
 
 struct ContentView_Previews: PreviewProvider {
   
-    static let dataService = ProductionDataService()
+  static let dataService = ProductionDataService(url: URL(string: "https://jsonplaceholder.typicode.com/posts")!)
   
     static var previews: some View {
        ContentView(dataService: dataService)
